@@ -35,11 +35,13 @@ func main() {
 	http.Handle("/index.mjs", withExecTime(getIndexjs))
 	http.Handle("/index.css", withExecTime(getIndexCss))
 	http.Handle("/realtime/cpus", withExecTime(cpusGet))
+	storeCpuUsageEverySecond()
 	InfoLogger.Println("starting server")
 	err := http.ListenAndServe(":7052", nil)
 	if err != nil {
 		println(err)
 	}
+
 }
 
 func getIndex(w http.ResponseWriter, r *http.Request) {
@@ -87,28 +89,31 @@ func cpusGet(w http.ResponseWriter, _ *http.Request) {
 	fmt.Fprintf(w, "%s\n", getCpuUsage())
 }
 
-func storeCpuUsage(cpuUsageArray []byte) {
-	const createTable string = `
+func storeCpuUsageEverySecond() {
+	for range time.Tick(time.Second * 1) {
+		const createTable string = `
   CREATE TABLE IF NOT EXISTS CPU_USAGE (
   time INTEGER NOT NULL PRIMARY KEY,
   usage BLOB NOT NULL
   );`
-	cpuUsage := fmt.Sprintf("%s", cpuUsageArray)
-	db, err := sql.Open("sqlite3", "../db/usage.db")
-	if err != nil {
-		ErrorLogger.Printf("database error %v", err)
-		return
+		cpuUsage := fmt.Sprintf("%s", getCpuUsage())
+		db, err := sql.Open("sqlite3", "../db/usage.db")
+		if err != nil {
+			ErrorLogger.Printf("database error %v", err)
+			return
+		}
+		_, err = db.Exec(createTable)
+		if err != nil {
+			ErrorLogger.Printf("database error %v", err)
+			return
+		}
+		_, err = db.Exec("INSERT INTO CPU_USAGE VALUES(?,?);", time.Now().Unix(), cpuUsage)
+		if err != nil {
+			ErrorLogger.Printf("database error %v", err)
+			return
+		}
 	}
-	_, err = db.Exec(createTable)
-	if err != nil {
-		ErrorLogger.Printf("database error %v", err)
-		return
-	}
-	_, err = db.Exec("INSERT INTO CPU_USAGE VALUES(?,?);", time.Now().Unix(), cpuUsage)
-	if err != nil {
-		ErrorLogger.Printf("database error %v", err)
-		return
-	}
+
 }
 
 func withExecTime(hf httpHandlerFunc) http.Handler {
