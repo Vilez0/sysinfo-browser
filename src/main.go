@@ -132,8 +132,17 @@ func storeCpuUsageEverySecond() {
   time INTEGER NOT NULL PRIMARY KEY,
   usage BLOB NOT NULL
   );`
+		const DeleteLastDay string = `delete FROM CPU_USAGE WHERE time <= UNIXEPOCH('now','-24 hours');`
+
 		cpuUsage := string(getCpuUsage())
 		db, err := sql.Open("sqlite3", database)
+		if err != nil {
+			ErrorLogger.Printf("database error %v", err)
+			return
+		}
+
+		//* Delete the data that older than 24 hours
+		_, err = db.Exec(DeleteLastDay)
 		if err != nil {
 			ErrorLogger.Printf("database error %v", err)
 			return
