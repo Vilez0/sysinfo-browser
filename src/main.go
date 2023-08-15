@@ -35,8 +35,7 @@ func main() {
 	go storeCpuUsageEverySecond()
 	router := gin.Default()
 	router.GET("/", serveIndex)
-	router.GET("/index.mjs", serveIndexjs)
-	router.GET("/index.css", serveIndexCss)
+	router.GET("/:file", serveIndex)
 	router.GET("/realtime/cpus/", serveCpuUsage)
 	router.GET("/realtime/cpus/:seconds/*average", serveCpuUsage)
 	router.Run(":7052")
@@ -44,17 +43,13 @@ func main() {
 }
 
 func serveIndex(c *gin.Context) {
-	c.File("index.html")
-}
-
-func serveIndexCss(c *gin.Context) {
-	c.Request.Header.Set("Content-Type", "text/css;charset=utf-8")
-	c.File("index.css")
-}
-
-func serveIndexjs(c *gin.Context) {
-	c.Request.Header.Set("content-type", "application/javascript;charset=utf-8")
-	c.File("index.mjs")
+	file := c.Param("file")
+	println(file)
+	if file == "" {
+		c.File("index.html")
+	} else if file == "index.css" || file == "index.mjs" {
+		c.File(file)
+	}
 
 }
 
