@@ -3,28 +3,23 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"math"
-	"net/http"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/shirou/gopsutil/cpu"
 )
-
-type httpHandlerFunc func(http.ResponseWriter, *http.Request)
 
 // * Define your database location here:
 const database string = "../db/usage.db"
 
 var (
-	InfoLogger  *log.Logger
 	ErrorLogger *log.Logger
 )
 
@@ -34,64 +29,44 @@ func init() {
 		log.Fatal(err)
 	}
 	mw := io.MultiWriter(os.Stdout, logFile)
-	InfoLogger = log.New(mw, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 	ErrorLogger = log.New(mw, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 }
 func main() {
 	go storeCpuUsageEverySecond()
-	http.Handle("/", withExecTime(serveIndex))
-	http.Handle("/index.mjs", withExecTime(serveIndexjs))
-	http.Handle("/index.css", withExecTime(serveIndexCss))
-	http.Handle("/realtime/cpus/", withExecTime(serveCpuUsage))
-	InfoLogger.Println("starting server")
-	err := http.ListenAndServe(":7052", nil)
-	if err != nil {
-		println(err)
-	}
+	router := gin.Default()
+	router.GET("/", serveIndex)
+	router.GET("/index.mjs", serveIndexjs)
+	router.GET("/index.css", serveIndexCss)
+	router.GET("/realtime/cpus/", serveCpuUsage)
+	router.GET("/realtime/cpus/:seconds/*average", serveCpuUsage)
+	router.Run(":7052")
 
 }
 
-func serveIndex(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "index.html")
+func serveIndex(c *gin.Context) {
+	c.File("index.html")
 }
 
-func serveIndexCss(w http.ResponseWriter, _ *http.Request) {
-	file, err := os.ReadFile("index.css")
-	if err != nil {
-		ErrorLogger.Printf("error reading index.css file: %v", err)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/css;charset=utf-8")
-	_, err = w.Write(file)
-	if err != nil {
-		return
-	}
+func serveIndexCss(c *gin.Context) {
+	c.Request.Header.Set("Content-Type", "text/css;charset=utf-8")
+	c.File("index.css")
 }
 
-func serveIndexjs(w http.ResponseWriter, _ *http.Request) {
-	file, err := os.ReadFile("./index.mjs")
-	if err != nil {
-		ErrorLogger.Printf("error reading index.mjs file: %v", err)
-		return
-	}
+func serveIndexjs(c *gin.Context) {
+	c.Request.Header.Set("content-type", "application/javascript;charset=utf-8")
+	c.File("index.mjs")
 
-	w.Header().Set("content-type", "application/javascript;charset=utf-8")
-	_, err = w.Write(file)
-	if err != nil {
-		return
-	}
 }
 
-func serveCpuUsage(w http.ResponseWriter, r *http.Request) {
-	url := r.URL.RequestURI()
+func serveCpuUsage(c *gin.Context) {
+	seconds := c.Param("seconds")
+	average := strings.ReplaceAll(c.Param("average"), "/", "")
 	//*Check the url, then serve the content as the url
-	if url == "/realtime/cpus/" || url == "/realtime/cpus" {
-		//* Just return the cpu usage
-		fmt.Fprint(w, string(getCpuUsage()))
-	} else if strings.Contains(url, "/realtime/cpus/average") {
-		//* Grab the seconds from url. if /realtime/cpus/average/x is the url, x will be the seconds
-		seconds, err := strconv.Atoi(strings.Split(url, "/realtime/cpus/average/")[1])
+	if seconds == "" {
+		c.String(200, string(getCpuUsage()))
+		return
+	} else if seconds == "average" && average != "" {
+		seconds, err := strconv.Atoi(average)
 		if err != nil {
 			ErrorLogger.Printf("error when converting string to integar: %v", err)
 			return
@@ -99,15 +74,16 @@ func serveCpuUsage(w http.ResponseWriter, r *http.Request) {
 		values := getCpuUsageLastSeconds(seconds)
 		//* Return the last x seconds cpu usage average and  confidence Interval
 		average, confidenceInterval := calculateCpuUsageConfidenceInterval(values)
-		fmt.Fprintf(w, "average: %v\nconfidence Interval: %v", average, confidenceInterval)
+		c.String(200, "average: %v\nconfidence Interval: %v", average, confidenceInterval)
+		return
 	} else {
-		seconds, err := strconv.Atoi(strings.Split(url, "/realtime/cpus/")[1])
+		seconds, err := strconv.Atoi(seconds)
 		if err != nil {
 			ErrorLogger.Printf("error when converting string to integar: %v", err)
 			return
 		}
 		//* Return all values stored in column usage in last $seconds seconds
-		fmt.Fprintf(w, "%v\n", getCpuUsageLastSeconds(seconds))
+		c.String(200, "%v\n", getCpuUsageLastSeconds(seconds))
 	}
 }
 
@@ -224,16 +200,4 @@ func calculateCpuUsageConfidenceInterval(samples []float64) (float64, []float64)
 	result := []float64{lowest, highest}
 	// fmt.Printf("lowest: %v, highest: %v\n", lowest, highest,)
 	return mean, result
-}
-
-// * Functions for get the someFunction execute time
-func withExecTime(hf httpHandlerFunc) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer duration(time.Now(), r.Method, r.URL)
-		hf(w, r)
-	})
-}
-func duration(start time.Time, method string, url *url.URL) {
-	execTime := time.Since(start)
-	InfoLogger.Printf("%-5s | %-12s | %-20s ", method, execTime, url)
 }
