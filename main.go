@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"io"
 	"log"
@@ -12,12 +11,27 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/shirou/gopsutil/cpu"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 // * Define your database location here:
-const database string = "../db/usage.db"
+const database string = "db/usage.db"
+
+type CpuUsage struct {
+	time  int64  `gorm:"column:TIME;type:int;primaryKey;unique;not null"`
+	usage []byte `gorm:"column:USAGE;type:blob;not null;"`
+}
+type Tabler interface {
+	TableName() string
+}
+
+// TableName overrides the table name used by User to `profiles`
+func (CpuUsage) TableName() string {
+	return `CPU_USAGE`
+}
 
 var (
 	ErrorLogger *log.Logger
@@ -32,12 +46,13 @@ func init() {
 	ErrorLogger = log.New(mw, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 }
 func main() {
-	go storeCpuUsageEverySecond()
 	router := gin.Default()
 	router.GET("/", serveIndex)
 	router.GET("/:file", serveIndex)
 	router.GET("/realtime/cpus/", serveCpuUsage)
 	router.GET("/realtime/cpus/:seconds/*average", serveCpuUsage)
+	go storeCpuUsageEverySecond()
+
 	router.Run(":7052")
 
 }
@@ -98,76 +113,66 @@ func getCpuUsage() []byte {
 func storeCpuUsageEverySecond() {
 	//* Keep executing this function every 1 second
 	for range time.Tick(time.Second * 1) {
-		const createTable string = `
-  CREATE TABLE IF NOT EXISTS CPU_USAGE (
-  time INTEGER NOT NULL PRIMARY KEY,
-  usage BLOB NOT NULL
-  );`
-		const DeleteLastDay string = `delete FROM CPU_USAGE WHERE time <= UNIXEPOCH('now','-24 hours');`
-
-		cpuUsage := string(getCpuUsage())
-		db, err := sql.Open("sqlite3", database)
+		// ds,err := sql.Open("sqlite3","db/usage.db")
+		db, err := gorm.Open(sqlite.Open(database), &gorm.Config{})
 		if err != nil {
-			ErrorLogger.Printf("database error %v", err)
+			ErrorLogger.Printf("Cannot open database: %v", err)
 			return
 		}
 
-		//* Delete the data that older than 24 hours
-		_, err = db.Exec(DeleteLastDay)
+		data := CpuUsage{time: time.Now().Unix(), usage: getCpuUsage()}
+		err = db.AutoMigrate(data)
 		if err != nil {
-			ErrorLogger.Printf("database error %v", err)
+			ErrorLogger.Printf("Cannot migrate database: %v", err)
 			return
 		}
-		//* Create the table if not exists
-		_, err = db.Exec(createTable)
-		if err != nil {
-			ErrorLogger.Printf("database error %v", err)
-			return
-		}
-		//* Append the unixtimestamp and cpu usage into database
-		_, err = db.Exec("INSERT INTO CPU_USAGE VALUES(?,?);", time.Now().Unix(), cpuUsage)
-		if err != nil {
-			ErrorLogger.Printf("database error %v", err)
-			return
-		}
+		result := db.Create(&data)
+		println(result.Error, result.RowsAffected)
+		// db.Delete(&CpuUsage{}, "time <= UNIXEPOCH('now','-24 hours')")
+
 	}
 }
 
 func getCpuUsageLastSeconds(seconds int) []float64 {
-	db, err := sql.Open("sqlite3", database)
+	var cpuUsages []float64
+	db, err := gorm.Open(sqlite.Open(database), &gorm.Config{})
 	if err != nil {
 		ErrorLogger.Printf("Cannot open database: %v", err)
 	}
-	//* Get the usage data from the database that stored in last x seconds
-	data, err := db.Query("SELECT usage FROM CPU_USAGE WHERE time >= UNIXEPOCH('now','-" + strconv.Itoa(seconds) + " seconds');")
-	if err != nil {
-		ErrorLogger.Printf("Cannot extract usage data from database: %v", err)
-	}
 
-	//* Scan every element and append it to cpuUsages slice
-	var cpuUsages []float64
-	defer data.Close()
-	for data.Next() {
-		var usage string
-		err = data.Scan(&usage)
-		if err != nil {
-			ErrorLogger.Printf("Cannot scan database: %v\n", err)
-		}
+	data := db.First(&CpuUsage{}, "time >= UNIXEPOCH('now','-"+strconv.Itoa(seconds)+" seconds')")
+	print(data)
+	// db, err := sql.Open("sqlite3", database)
+	// //* Get the usage data from the database that stored in last x seconds
+	// data, err := db.Query("SELECT usage FROM CPU_USAGE WHERE time >= UNIXEPOCH('now','-" + strconv.Itoa(seconds) + " seconds');")
+	// if err != nil {
+	// 	ErrorLogger.Printf("Cannot extract usage data from database: %v", err)
+	// }
 
-		//* The data is stored like [value1,value2,value3] in string type, here we are parsing the data to get the values
-		usage = strings.Replace(usage, "[", "", -1)
-		usage = strings.Replace(usage, "]", "", -1)
-		usages := strings.Split(usage, ",")
+	// //* Scan every element and append it to cpuUsages slice
+	// var cpuUsages []float64
+	// defer data.Close()
+	// for data.Next() {
+	// 	var usage string
+	// 	err = data.Scan(&usage)
+	// 	if err != nil {
+	// 		ErrorLogger.Printf("Cannot scan database: %v\n", err)
+	// 	}
 
-		//* append the values to slice
-		for element := range usages {
-			toFloat64, err := strconv.ParseFloat(usages[element], 32)
-			if err != nil {
-				ErrorLogger.Printf("Cannot convert string to float64: %v\n", err)
-			}
-			cpuUsages = append(cpuUsages, toFloat64)
-		}
-	}
+	// 	//* The data is stored like [value1,value2,value3] in string type, here we are parsing the data to get the values
+	// 	usage = strings.Replace(usage, "[", "", -1)
+	// 	usage = strings.Replace(usage, "]", "", -1)
+	// 	usages := strings.Split(usage, ",")
+
+	// 	//* append the values to slice
+	// 	for element := range usages {
+	// 		toFloat64, err := strconv.ParseFloat(usages[element], 32)
+	// 		if err != nil {
+	// 			ErrorLogger.Printf("Cannot convert string to float64: %v\n", err)
+	// 		}
+	// 		cpuUsages = append(cpuUsages, toFloat64)
+	// 	}
+	// }
 	return cpuUsages
 }
 
