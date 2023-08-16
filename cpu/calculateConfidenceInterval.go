@@ -26,6 +26,5 @@ func CalculateConfidenceInterval(samples []float64) (float64, []float64) {
 	lowest := mean - s
 
 	result := []float64{lowest, highest}
-	// fmt.Printf("lowest: %v, highest: %v\n", lowest, highest,)
 	return mean, result
 }

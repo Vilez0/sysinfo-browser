@@ -1,21 +1,23 @@
 package cpu
 
 import (
-	"encoding/json"
+	"fmt"
 	"htop/util"
 
 	"github.com/shirou/gopsutil/cpu"
 )
 
-func GetUsage() []byte {
+func GetUsage() string {
 	percent, err := cpu.Percent(0, true)
 	if err != nil {
 		util.ErrorLogger.Printf("error getting cpu usage percent: %v", err)
 	}
-	//* Encode the cpu usage as json
-	e, err := json.Marshal(percent)
-	if err != nil {
-		util.ErrorLogger.Printf("error marshaling json: %v", err)
+	var intPercent []int
+	for e := range percent {
+		intPercent = append(intPercent, int(percent[e]))
 	}
-	return e
+
+	result := fmt.Sprint(intPercent)
+
+	return result
 }

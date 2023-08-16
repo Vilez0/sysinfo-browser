@@ -1,8 +1,11 @@
 package cpu
 
 import (
+	"fmt"
 	"htop/util"
 	"strconv"
+	"strings"
+	"time"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -10,16 +13,12 @@ import (
 )
 
 type CpuUsage struct {
-	time  int64  `gorm:"column:TIME;type:int;primaryKey;unique;not null"`
-	usage []byte `gorm:"column:USAGE;type:blob;not null;"`
-}
-type Tabler interface {
-	TableName() string
+	Time  int64 `gorm:"primaryKey;autoIncrement:false"`
+	Usage string
 }
 
-// TableName overrides the table name used by User to `profiles`
-func (CpuUsage) TableName() string {
-	return `CPU_USAGE`
+type Usage struct {
+	Usage string
 }
 
 func GetUsagebySeconds(seconds int) []float64 {
@@ -27,41 +26,34 @@ func GetUsagebySeconds(seconds int) []float64 {
 	// database := viper.Get("database")
 	db, err := gorm.Open(sqlite.Open("db/usage.db"), &gorm.Config{})
 	if err != nil {
-		util.ErrorLogger.Printf("Cannot open database: %v", err)
+		util.ErrorLogger.Printf("Cannot open database: %v\n", err)
 	}
+	var usages []Usage
+	// data := db.First(&usage, "time >= UNIXEPOCH('now','-"+strconv.Itoa(seconds)+" seconds')")
+	data := db.Table(`cpu_usages`).Where("time >= ?", time.Now().Unix()-int64(seconds)).Select(`usage`).Find(&usages)
+	if data.Error != nil {
+		util.ErrorLogger.Printf(`Error when searching database: %v\n`, data.Error)
+	}
+	println(data.RowsAffected, data.Error, data)
+	fmt.Printf("%v\n", usages[0])
+	fmt.Print(len(usages))
+	// var strUsages []string
 
-	data := db.First(&CpuUsage{}, "time >= UNIXEPOCH('now','-"+strconv.Itoa(seconds)+" seconds')")
-	print(data)
-	// db, err := sql.Open("sqlite3", database)
-	// //* Get the usage data from the database that stored in last x seconds
-	// data, err := db.Query("SELECT usage FROM CPU_USAGE WHERE time >= UNIXEPOCH('now','-" + strconv.Itoa(seconds) + " seconds');")
-	// if err != nil {
-	// 	ErrorLogger.Printf("Cannot extract usage data from database: %v", err)
-	// }
-
-	// //* Scan every element and append it to cpuUsages slice
-	// var cpuUsages []float64
-	// defer data.Close()
-	// for data.Next() {
-	// 	var usage string
-	// 	err = data.Scan(&usage)
-	// 	if err != nil {
-	// 		ErrorLogger.Printf("Cannot scan database: %v\n", err)
-	// 	}
-
-	// 	//* The data is stored like [value1,value2,value3] in string type, here we are parsing the data to get the values
-	// 	usage = strings.Replace(usage, "[", "", -1)
-	// 	usage = strings.Replace(usage, "]", "", -1)
-	// 	usages := strings.Split(usage, ",")
-
-	// 	//* append the values to slice
-	// 	for element := range usages {
-	// 		toFloat64, err := strconv.ParseFloat(usages[element], 32)
-	// 		if err != nil {
-	// 			ErrorLogger.Printf("Cannot convert string to float64: %v\n", err)
-	// 		}
-	// 		cpuUsages = append(cpuUsages, toFloat64)
-	// 	}
-	// }
+	for e := range usages {
+		usage := fmt.Sprint(usages[e])
+		usage = strings.ReplaceAll(usage, "[", "")
+		usage = strings.ReplaceAll(usage, "]", "")
+		usage = strings.ReplaceAll(usage, "{", "")
+		usage = strings.ReplaceAll(usage, "}", "")
+		usages := strings.Split(usage, " ")
+		println(usage)
+		for element := range usages {
+			toFloat64, err := strconv.ParseFloat(usages[element], 32)
+			if err != nil {
+				util.ErrorLogger.Printf("Cannot convert string to float64: %v\n", err)
+			}
+			cpuUsages = append(cpuUsages, toFloat64)
+		}
+	}
 	return cpuUsages
 }

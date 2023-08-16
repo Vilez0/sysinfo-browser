@@ -14,7 +14,7 @@ func ServeCpuUsage(c *gin.Context) {
 	average := strings.ReplaceAll(c.Param("average"), "/", "")
 	//*Check the url, then serve the content as the url
 	if seconds == "" {
-		c.String(200, string(cpu.GetUsage()))
+		c.String(200, cpu.GetUsage())
 		return
 	} else if seconds == "average" && average != "" {
 		seconds, err := strconv.Atoi(average)
