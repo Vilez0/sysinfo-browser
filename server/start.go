@@ -10,6 +10,6 @@ func Run(addr string) {
 	router.GET("/:file", ServeIndex)
 	router.GET("/realtime/cpus/", ServeCpuUsage)
 	router.GET("/realtime/cpus/:seconds/*average", ServeCpuUsage)
-
+	router.GET("/system/:name/:info",ServeSystem)
 	router.Run(addr)
 }

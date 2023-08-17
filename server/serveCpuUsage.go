@@ -14,15 +14,22 @@ func ServeCpuUsage(c *gin.Context) {
 	average := strings.ReplaceAll(c.Param("average"), "/", "")
 	//*Check the url, then serve the content as the url
 	if seconds == "" {
-		c.String(200, cpu.GetUsage())
+		usage, _ := cpu.Usage()
+		c.String(200, usage)
 		return
+	} else if seconds == "average" && average == "" {
+		_, average := cpu.Usage()
+		result := strconv.Itoa(average)
+		c.String(200, result)
+		return
+
 	} else if seconds == "average" && average != "" {
 		seconds, err := strconv.Atoi(average)
 		if err != nil {
 			util.ErrorLogger.Printf("error when converting string to integar: %v", err)
 			return
 		}
-		values := cpu.GetUsagebySeconds(seconds)
+		values := cpu.UsagebySeconds(seconds)
 		//* Return the last x seconds cpu usage average and  confidence Interval
 		average, confidenceInterval := cpu.CalculateConfidenceInterval(values)
 		c.String(200, "average: %v\nconfidence Interval: %v", average, confidenceInterval)
@@ -34,6 +41,6 @@ func ServeCpuUsage(c *gin.Context) {
 			return
 		}
 		//* Return all values stored in column usage in last $seconds seconds
-		c.String(200, "%v\n", cpu.GetUsagebySeconds(seconds))
+		c.String(200, "%v\n", cpu.UsagebySeconds(seconds))
 	}
 }
