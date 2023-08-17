@@ -16,8 +16,8 @@ func StoreCpuUsageEverySecond() {
 			util.ErrorLogger.Printf("Cannot open database: %v", err)
 			return
 		}
-
-		data := CpuUsage{Time: time.Now().Unix(), Usage: GetUsage()}
+		usage,_ := Usage()
+		data := CpuUsage{Time: time.Now().Unix(), Usage: usage}
 		err = db.AutoMigrate(&CpuUsage{})
 		if err != nil {
 			util.ErrorLogger.Printf("Cannot migrate database: %v", err)
