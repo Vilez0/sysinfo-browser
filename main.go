@@ -1,7 +1,7 @@
 package main
 
 import (
-	"htop/cpu"
+	"htop/info/cpu"
 	"htop/server"
 )
 
