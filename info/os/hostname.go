@@ -1,4 +1,4 @@
-package info
+package osutils
 
 import (
 	"htop/util"
