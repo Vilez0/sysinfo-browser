@@ -1,6 +1,7 @@
 package cpu
 
 import (
+	"fmt"
 	"htop/util"
 	"time"
 
@@ -17,7 +18,7 @@ func StoreCpuUsageEverySecond() {
 			return
 		}
 		usage, _ := Usage()
-		data := CpuUsage{Time: time.Now().Unix(), Usage: usage}
+		data := CpuUsage{Time: time.Now().Unix(), Usage:fmt.Sprint(usage)}
 		err = db.AutoMigrate(&CpuUsage{})
 		if err != nil {
 			util.ErrorLogger.Printf("Cannot migrate database: %v", err)

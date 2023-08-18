@@ -38,7 +38,7 @@ func UsagebySeconds(seconds int) []float64 {
 		usage := fmt.Sprint(usages[e])
 		replacer := strings.NewReplacer("[", "", "]", "", "{", "", "}", "")
 		usage = replacer.Replace(usage)
-		usages := strings.Split(usage, ",")
+		usages := strings.Split(usage, " ")
 
 		for element := range usages {
 			toFloat64, err := strconv.ParseFloat(usages[element], 32)

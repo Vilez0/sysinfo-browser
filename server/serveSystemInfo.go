@@ -16,29 +16,29 @@ func ServeSystem(c *gin.Context) {
 	info = strings.ReplaceAll(info, "/", "")
 	if name == "os" {
 		if info == "hostname" {
-			c.String(200, osutils.Hostname())
+			c.String(200, marshaler(osutils.Hostname()))
 		} else if info == "name" {
-			c.String(200, osutils.OsName())
-		} else {
-			c.String(200, osutils.KernelName())
+			c.String(200, marshaler(osutils.OsName()))
+		} else if info == "kernel" {
+			c.String(200, marshaler(osutils.KernelName()))
 		}
 	} else if name == "cpu" {
 		if info == "name" {
-			c.String(200, cpu.Name())
+			c.String(200, marshaler(cpu.Name()))
 		}
 	} else if name == "gpu" {
 		if info == "name" {
-			c.String(200, "%v", gpu.Name())
+			c.String(200, "%v", marshaler(gpu.Name()))
 		}
 	} else if name == "mem" {
 		if info == "total" {
-			c.String(200, "%v", mem.Total())
+			c.String(200, "%v", marshaler(mem.Total()))
 		} else if info == "usage" {
-			c.String(200, "%v", mem.UsageMB())
+			c.String(200, "%v", marshaler(mem.UsageMB()))
 		} else if info == "usagepercent" {
-			c.String(200, "%v", mem.UsagePercent())
+			c.String(200, "%v", marshaler(mem.UsagePercent()))
 		} else if info == "available" {
-			c.String(200, "%v", mem.Available())
+			c.String(200, "%v", marshaler(mem.Available()))
 		}
 	}
 

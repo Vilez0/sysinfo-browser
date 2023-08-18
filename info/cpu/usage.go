@@ -1,7 +1,6 @@
 package cpu
 
 import (
-	"encoding/json"
 	"htop/util"
 	"strconv"
 	"strings"
@@ -17,6 +16,7 @@ func getUsageFromIndex(indexNumber int) int {
 		if indexNumber > len(lines)-1 {
 			return 0
 		}
+
 		if indexNumber != 0 {
 			line = (lines[indexNumber])[6:] // get rid of cpu plus 2 spaces
 		} else {
@@ -39,11 +39,11 @@ func getUsageFromIndex(indexNumber int) int {
 		}
 		prevIdleTime = idleTime
 		prevTotalTime = totalTime
-		time.Sleep(time.Millisecond * 200)
+		time.Sleep(time.Millisecond * 250)
 	}
 	return 0
 }
-func Usage() (string, int) {
+func Usage() ([]int, int) {
 	var CpusUsage []int
 	var average int
 	for i := range util.ReadProcFile("/proc/stat", "cpu") {
@@ -53,9 +53,6 @@ func Usage() (string, int) {
 			CpusUsage = append(CpusUsage, getUsageFromIndex(i))
 		}
 	}
-	result, err := json.Marshal(CpusUsage)
-	if err != nil {
-		util.ErrorLogger.Printf("error when marshaling json: %v", err)
-	}
-	return string(result), average
+
+	return CpusUsage, average
 }
