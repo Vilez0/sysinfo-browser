@@ -9,18 +9,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ServeCpuUsage(c *gin.Context) {
-	seconds := c.Param("seconds")
-	average := strings.ReplaceAll(c.Param("average"), "/", "")
+func ServeCpuUsage(ctx *gin.Context) {
+	seconds := ctx.Param("seconds")
+	average := strings.ReplaceAll(ctx.Param("average"), "/", "")
 	//*Check the url, then serve the content as the url
 	if seconds == "" {
 		usage, _ := cpu.Usage()
-
-		c.String(200, marshaler(usage))
+		ctx.Data(util.ReturnResponse(usage, 200, "ok", "CPU Usage in last 1 second"))
 		return
 	} else if seconds == "average" && average == "" {
 		_, average := cpu.Usage()
-		c.String(200, marshaler(average))
+		ctx.Data(util.ReturnResponse(average, 200, "ok", "Average CPU Usage in last 1 second"))
 		return
 
 	} else if seconds == "average" && average != "" {
@@ -31,7 +30,7 @@ func ServeCpuUsage(c *gin.Context) {
 		}
 		values := cpu.UsagebySeconds(seconds)
 		average, _ := cpu.CalculateConfidenceInterval(values)
-		c.String(200, marshaler(int(average)))
+		ctx.Data(util.ReturnResponse(int(average), 200, "ok", "Average CPU Usage in last xxx seconds"))
 		return
 	} else if seconds == "cinterval" && average != "" {
 		seconds, err := strconv.Atoi(average)
@@ -43,10 +42,10 @@ func ServeCpuUsage(c *gin.Context) {
 
 		_, cinterval := cpu.CalculateConfidenceInterval(values)
 		var intcInterval []int
-		for _,e := range cinterval {
+		for _, e := range cinterval {
 			intcInterval = append(intcInterval, int(e))
 		}
-		c.String(200, marshaler(intcInterval))
+		ctx.Data(util.ReturnResponse(intcInterval, 200, "ok", "confidence interval"))
 		return
 	} else if seconds != "" && average == "" {
 		seconds, err := strconv.Atoi(seconds)
@@ -55,6 +54,6 @@ func ServeCpuUsage(c *gin.Context) {
 			return
 		}
 		//* Return all values stored in column usage in last $seconds seconds
-		c.String(200, marshaler(cpu.UsagebySeconds(seconds)))
+		ctx.Data(util.ReturnResponse(cpu.UsagebySeconds(seconds), 200, "ok", "CPU Usage in last xxx seconds"))
 	}
 }
