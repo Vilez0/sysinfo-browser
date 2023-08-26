@@ -1,9 +1,9 @@
 package server
 
 import (
-	"encoding/json"
-	"htop/util"
-	"reflect"
+	// "encoding/json"
+	// "htop/util"
+	// "reflect"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,21 +14,14 @@ func Run(addr string) {
 	router.GET("/:file", ServeIndex)
 	router.GET("/realtime/cpus/", ServeCpuUsage)
 	router.GET("/realtime/cpus/:seconds/*average", ServeCpuUsage)
-	router.GET("/system/:name/:info", ServeSystem)
+	// router.GET("/system/:name/:info/*info2", ServeSystem)
+
+	router.GET("/system/os/:info", serveOSInfo)
+	router.GET("/system/cpu/:info", serverCpuInfo)
+	router.GET("/system/gpu/:info", serverGpuInfo)
+	router.GET("/system/mem/:info", serveMemInfo)
+	router.GET("/system/disks/", serveDisks)
+	router.GET("/system/disks/:part/:info/", serveDisks)
+
 	router.Run(addr)
-}
-
-func marshaler(value any) string {
-
-	rt := reflect.TypeOf(value)
-	if rt.Kind() != reflect.Slice && rt.Kind() != reflect.Array {
-		var slice []any
-		slice = append(slice, value)
-		value = slice
-	}
-	jsonValue, err := json.Marshal(value)
-	if err != nil {
-		util.ErrorLogger.Println(`cannot marshal json: `, err)
-	}
-	return string(jsonValue)
 }
