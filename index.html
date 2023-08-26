@@ -1,10 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<title>axact</title>
-		<script type="module" src="/index.mjs"></script>
-		<link type="text/css" rel="stylesheet" href="/index.css" />
-	</head>
-	<body>
-	</body>
+  <head>
+    <title>axact</title>
+    <script type="module" src="/index.mjs"></script>
+    <link type="text/css" rel="stylesheet" href="/index.css" />
+  </head>
+
+  <body>
+    <h4>Hostname: <span id="Hostname"></span></h4>
+    <h4>Kernel: <span id="KernelName"></span></h4>
+    <h4>Distro Name: <span id="DistroName"></span></h4>
+    <h4>Desktop: <span id="Desktop"></span></h4>
+    <h4>Gpu: <span id="GpuName"></span></h4>
+    <h4>
+      Memory:
+      <div id="memUsage"></div>
+    </h4>
+    <h4>Disks:</h4>
+    <span id="diskUsage"> </span>
+    <h4>Cpu: <span id="CpuName"></span></h4>
+
+    <span>
+      <span>
+        <h4>Usage:</h4>
+        <div id="cpuUsage"></div>
+      </span>
+
+      <h4>Confidence Interval:</h4>
+      <span class="flex-items margin30">
+        <span>
+          <h4>90s:</h4>
+          <div id="c90s"></div>
+        </span>
+        <span>
+          <h4>900s:</h4>
+          <div id="c900s"></div>
+        </span>
+      </span>
+    </span>
+
+    <span id="cpuUsage"> </span>
+  </body>
 </html>
