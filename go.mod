@@ -1,4 +1,4 @@
-module htop
+module github.com/Edip1/sysinfo-browser
 
 go 1.20
 
