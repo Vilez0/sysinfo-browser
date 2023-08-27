@@ -3,45 +3,91 @@ import htm from "https://unpkg.com/htm?module";
 
 const html = htm.bind(h);
 
+init();
+async function init() {
+  renderHostname();
+  renderDistroName();
+  renderKernelName();
+  renderDesktop();
+  renderCpuName();
+  renderGpuName();
+  renderUptime();
+  renderDisks();
+  updateCpu();
+  updateMemory();
+  updatecInterval(90);
+  updatecInterval(900);
+  setInterval(updateCpu, 1000);
+  setInterval(updateMemory, 2500);
+  setInterval(updatecInterval(90), 5000);
+  setInterval(updatecInterval(900), 15000);
+}
+
+// This code renders a component to the DOM based on the element ID that is passed in
 function renderer(elementId, component) {
   render(html`${component}`, document.getElementById(elementId));
 }
 
-async function init() {
-  await fetch("/system/os/hostname")
-    .then((res) => res.json())
-    .then((res) => {
-      renderer("Hostname", res.data);
-    });
-
-  await fetch("/system/os/hostname")
+// Thus functions retrieve info from server and render it to the DOM
+async function renderHostname() {
+  await fetch("/info/os/hostname")
     .then((res) => res.json())
     .then((res) => renderer("Hostname", res.data));
+}
 
-  await fetch("/system/os/name")
+async function renderHostname() {
+  await fetch("/info/os/hostname")
+    .then((res) => res.json())
+    .then((res) => renderer("Hostname", res.data));
+}
+
+async function renderHostname() {
+  await fetch("/info/os/hostname")
+    .then((res) => res.json())
+    .then((res) => renderer("Hostname", res.data));
+}
+
+async function renderDistroName() {
+  await fetch("/info/os/name")
     .then((res) => res.json())
     .then((res) => renderer("DistroName", res.data));
-  await fetch("/system/os/kernel")
+}
+
+async function renderKernelName() {
+  await fetch("/info/os/kernel")
     .then((res) => res.json())
     .then((res) => renderer("KernelName", res.data));
-  await fetch("/system/os/desktop")
+}
+
+async function renderDesktop() {
+  await fetch("/info/os/desktop")
     .then((res) => res.json())
     .then((res) => renderer("Desktop", res.data));
-  await fetch("/system/cpu/name")
+}
+
+async function renderCpuName() {
+  await fetch("/info/cpu/name")
     .then((res) => res.json())
     .then((res) => renderer("CpuName", res.data));
+}
 
-  await fetch("/system/gpu/name")
+async function renderGpuName() {
+  await fetch("/info/gpu/name")
     .then((res) => res.json())
     .then((res) => renderer("GpuName", res.data));
-  renderDisks();
+}
+
+async function renderUptime() {
+  await fetch("/info/os/uptime")
+    .then((res) => res.json())
+    .then((res) => renderer("Uptime", res.data));
 }
 
 async function renderDisks() {
-  let disks = await fetch("/system/disks").then((res) => res.json());
+  let disks = await fetch("/info/disks").then((res) => res.json());
   await Promise.all(
     disks.data.map(async (disk) => {
-      let size = await fetch(`/system/disks/${disk}/size`).then((res) =>
+      let size = await fetch(`/info/disks/${disk}/size`).then((res) =>
         res.json()
       );
       document.getElementById(
@@ -52,7 +98,7 @@ async function renderDisks() {
 }
 
 async function updateCpu() {
-  let cpus = await fetch("/system/cpu/usage").then((res) => res.json());
+  let cpus = await fetch("/info/cpu/usage").then((res) => res.json());
   renderer(
     "cpuUsage",
     html`${cpus.data.map((cpu) => {
@@ -65,10 +111,10 @@ async function updateCpu() {
 }
 
 async function updatecInterval(seconds) {
-  let cIntervals = await fetch(`/system/cpu/usage/cinterval/${seconds}`).then(
+  let cIntervals = await fetch(`/info/cpu/usage/cinterval/${seconds}`).then(
     (res) => res.json()
   );
-  let usageAverage = await fetch(`/system/cpu/usage/average/${seconds}`).then(
+  let usageAverage = await fetch(`/info/cpu/usage/average/${seconds}`).then(
     (res) => res.json()
   );
   renderer(
@@ -89,11 +135,11 @@ async function updatecInterval(seconds) {
 }
 
 async function updateMemory() {
-  let memUsage = await fetch("/system/mem/usage").then((res) => res.json());
-  let memUsagePercent = await fetch("/system/mem/usagepercent").then((res) =>
+  let memUsage = await fetch("/info/mem/usage").then((res) => res.json());
+  let memUsagePercent = await fetch("/info/mem/usagepercent").then((res) =>
     res.json()
   );
-  let memTotal = await fetch("/system/mem/total").then((res) => res.json());
+  let memTotal = await fetch("/info/mem/total").then((res) => res.json());
   renderer(
     `memUsage`,
     html`
@@ -106,13 +152,3 @@ async function updateMemory() {
     `
   );
 }
-
-init();
-updateCpu();
-updateMemory();
-updatecInterval(90);
-updatecInterval(900);
-setInterval(updateCpu, 1000);
-setInterval(updateMemory, 2500);
-setInterval(updatecInterval(90), 5000);
-setInterval(updatecInterval(900), 15000);

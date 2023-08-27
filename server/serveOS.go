@@ -20,5 +20,7 @@ func serveOSInfo(ctx *gin.Context) {
 		ctx.Data(util.ReturnResponse(osutils.KernelName(), 200, "ok", "Kernel"))
 	} else if info == "desktop" {
 		ctx.Data(util.ReturnResponse(osutils.Desktop(), 200, "ok", "Desktop Environment"))
+	} else if info == "uptime" {
+		ctx.Data(util.ReturnResponse(osutils.Uptime(), 200, "ok", "Uptime"))
 	}
 }

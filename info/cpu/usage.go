@@ -11,7 +11,6 @@ func getUsageFromIndex(indexNumber int) int {
 	var prevIdleTime, prevTotalTime int
 	for i := 0; i <= 1; i++ {
 		lines := util.ReadProcFile("/proc/stat", "cpu")
-		// scanner.Scan()
 		var line string
 		if indexNumber > len(lines)-1 {
 			return 0
@@ -20,7 +19,7 @@ func getUsageFromIndex(indexNumber int) int {
 		if indexNumber != 0 {
 			line = (lines[indexNumber])[6:] // get rid of cpu plus 2 spaces
 		} else {
-			line = (lines[indexNumber])[5:] // get rid of cpu plus 2 spaces
+			line = (lines[indexNumber])[5:] // get rid of cpu0 plus 2 spaces
 
 		}
 
