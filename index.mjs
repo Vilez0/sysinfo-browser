@@ -52,10 +52,10 @@ async function renderDisks() {
 }
 
 async function updateCpu() {
-  let cpus = await fetch("/realtime/cpus").then((res) => res.json());
+  let cpus = await fetch("/system/cpu/usage").then((res) => res.json());
   renderer(
     "cpuUsage",
-    html`${cpus.map((cpu) => {
+    html`${cpus.data.map((cpu) => {
       return html`<div class="bar">
         <div class="bar-inner" style="width: ${cpu}%"></div>
         <label>${cpu.toFixed(2)}%</label>
@@ -64,50 +64,26 @@ async function updateCpu() {
   );
 }
 
-async function updatec90s() {
-  let cInterval90s = await fetch("/realtime/cpus/cinterval/90").then((res) =>
-    res.json()
+async function updatecInterval(seconds) {
+  let cIntervals = await fetch(`/system/cpu/usage/cinterval/${seconds}`).then(
+    (res) => res.json()
   );
-  let usageAverage90s = await fetch("/realtime/cpus/average/90").then((res) =>
-    res.json()
-  );
-  renderer(
-    "c90s",
-    html`<div class="bar">
-        <div class="bar-inner" style="width: ${cInterval90s.data[0]}%"></div>
-        <label>Lowest: ${cInterval90s.data[0]}%</label>
-      </div>
-      <div class="bar">
-        <div class="bar-inner" style="width: ${cInterval90s.data[1]}%"></div>
-        <label>Highest: ${cInterval90s.data[1]}%</label>
-      </div>
-      <div class="bar">
-        <div class="bar-inner" style="width: ${usageAverage90s.data}%"></div>
-        <label>Average: ${usageAverage90s.data}%</label>
-      </div>`
-  );
-}
-
-async function updatec900s() {
-  let cInterval900s = await fetch("/realtime/cpus/cinterval/900").then((res) =>
-    res.json()
-  );
-  let usageAverage900s = await fetch("/realtime/cpus/average/900").then((res) =>
-    res.json()
+  let usageAverage = await fetch(`/system/cpu/usage/average/${seconds}`).then(
+    (res) => res.json()
   );
   renderer(
-    "c900s",
+    `c${seconds}s`,
     html`<div class="bar">
-        <div class="bar-inner" style="width: ${cInterval900s.data[0]}%"></div>
-        <label>Lowest: ${cInterval900s.data[0]}%</label>
+        <div class="bar-inner" style="width: ${cIntervals.data[0]}%"></div>
+        <label>Lowest: ${cIntervals.data[0]}%</label>
       </div>
       <div class="bar">
-        <div class="bar-inner" style="width: ${cInterval900s.data[1]}%"></div>
-        <label>Highest: ${cInterval900s.data[1]}%</label>
+        <div class="bar-inner" style="width: ${cIntervals.data[1]}%"></div>
+        <label>Highest: ${cIntervals.data[1]}%</label>
       </div>
       <div class="bar">
-        <div class="bar-inner" style="width: ${usageAverage900s.data}%"></div>
-        <label>Average: ${usageAverage900s.data}%</label>
+        <div class="bar-inner" style="width: ${usageAverage.data}%"></div>
+        <label>Average: ${usageAverage.data}%</label>
       </div>`
   );
 }
@@ -134,9 +110,9 @@ async function updateMemory() {
 init();
 updateCpu();
 updateMemory();
-updatec90s();
-updatec900s();
+updatecInterval(90);
+updatecInterval(900);
 setInterval(updateCpu, 1000);
 setInterval(updateMemory, 2500);
-setInterval(updatec90s, 5000);
-setInterval(updatec900s, 15000);
+setInterval(updatecInterval(90), 5000);
+setInterval(updatecInterval(900), 15000);
