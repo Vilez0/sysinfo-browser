@@ -1,8 +1,8 @@
 package server
 
 import (
-	"htop/info/disk"
-	"htop/util"
+	"github.com/Edip1/sysinfo-browser/info/disk"
+	"github.com/Edip1/sysinfo-browser/util"
 
 	"github.com/gin-gonic/gin"
 )

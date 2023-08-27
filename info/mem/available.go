@@ -1,9 +1,10 @@
 package mem
 
 import (
-	"htop/util"
 	"strconv"
 	"strings"
+
+	"github.com/Edip1/sysinfo-browser/util"
 )
 
 func Available() int {

@@ -1,9 +1,10 @@
 package server
 
 import (
-	"htop/info/mem"
-	"htop/util"
 	"strings"
+
+	"github.com/Edip1/sysinfo-browser/info/mem"
+	"github.com/Edip1/sysinfo-browser/util"
 
 	"github.com/gin-gonic/gin"
 )

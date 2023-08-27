@@ -1,9 +1,10 @@
 package gpu
 
 import (
-	"htop/util"
 	"os/exec"
 	"strings"
+
+	"github.com/Edip1/sysinfo-browser/util"
 )
 
 func Name() string {

@@ -2,8 +2,9 @@ package cpu
 
 import (
 	"fmt"
-	"htop/util"
 	"time"
+
+	"github.com/Edip1/sysinfo-browser/util"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -21,7 +22,7 @@ func StoreCpuUsageEverySecond() {
 		// Get the CPU usage
 		usage, _ := Usage()
 		// Create a new CpuUsage struct
-		data := CpuUsage{Time: time.Now().Unix(), Usage:fmt.Sprint(usage)}
+		data := CpuUsage{Time: time.Now().Unix(), Usage: fmt.Sprint(usage)}
 		err = db.AutoMigrate(&CpuUsage{})
 		if err != nil {
 			util.ErrorLogger.Printf("Cannot migrate database: %v", err)

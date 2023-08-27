@@ -1,9 +1,10 @@
 package server
 
 import (
-	"htop/info/gpu"
-	"htop/util"
 	"strings"
+
+	"github.com/Edip1/sysinfo-browser/info/gpu"
+	"github.com/Edip1/sysinfo-browser/util"
 
 	"github.com/gin-gonic/gin"
 )

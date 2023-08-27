@@ -1,9 +1,10 @@
 package disk
 
 import (
-	"htop/util"
 	"os"
 	"strings"
+
+	"github.com/Edip1/sysinfo-browser/util"
 )
 
 func Disks() []string {

@@ -1,11 +1,9 @@
 package main
 
 import (
-	"htop/info/cpu"
-	"htop/server"
+	"github.com/Edip1/sysinfo-browser/info/cpu"
+	"github.com/Edip1/sysinfo-browser/server"
 )
-
-// * Define your database location here:
 
 func main() {
 	go cpu.StoreCpuUsageEverySecond()

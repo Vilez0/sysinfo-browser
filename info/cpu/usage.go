@@ -1,10 +1,11 @@
 package cpu
 
 import (
-	"htop/util"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Edip1/sysinfo-browser/util"
 )
 
 func getUsageFromIndex(indexNumber int) int {

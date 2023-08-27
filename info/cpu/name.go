@@ -2,9 +2,10 @@ package cpu
 
 import (
 	"bufio"
-	"htop/util"
 	"os"
 	"strings"
+
+	"github.com/Edip1/sysinfo-browser/util"
 )
 
 // Name returns the model name of the CPU.

@@ -1,9 +1,10 @@
 package server
 
 import (
-	osutils "htop/info/os"
-	"htop/util"
 	"strings"
+
+	osutils "github.com/Edip1/sysinfo-browser/info/os"
+	"github.com/Edip1/sysinfo-browser/util"
 
 	"github.com/gin-gonic/gin"
 )

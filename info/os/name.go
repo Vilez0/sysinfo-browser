@@ -2,9 +2,10 @@ package osutils
 
 import (
 	"bufio"
-	"htop/util"
 	"os"
 	"strings"
+
+	"github.com/Edip1/sysinfo-browser/util"
 )
 
 func parseOsrelease() []string {

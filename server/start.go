@@ -1,12 +1,6 @@
 package server
 
-import (
-	// "encoding/json"
-	// "htop/util"
-	// "reflect"
-
-	"github.com/gin-gonic/gin"
-)
+import "github.com/gin-gonic/gin"
 
 func Run(addr string) {
 	router := gin.Default()

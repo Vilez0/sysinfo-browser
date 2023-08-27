@@ -2,10 +2,11 @@ package server
 
 import (
 	"fmt"
-	"htop/info/cpu"
-	"htop/util"
 	"strconv"
 	"strings"
+
+	"github.com/Edip1/sysinfo-browser/info/cpu"
+	"github.com/Edip1/sysinfo-browser/util"
 
 	"github.com/gin-gonic/gin"
 )

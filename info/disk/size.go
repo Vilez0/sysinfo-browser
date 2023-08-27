@@ -2,9 +2,10 @@ package disk
 
 import (
 	"bufio"
-	"htop/util"
 	"os"
 	"strconv"
+
+	"github.com/Edip1/sysinfo-browser/util"
 )
 
 // This code reads the size of the disk and converts it to GB.

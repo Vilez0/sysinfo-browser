@@ -2,10 +2,11 @@ package cpu
 
 import (
 	"fmt"
-	"htop/util"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Edip1/sysinfo-browser/util"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
